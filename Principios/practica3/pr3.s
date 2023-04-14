@@ -57,29 +57,36 @@ msg_fin:    .asciiz "\nFin del programa.\n"
 # ncol -> $s2
 # size -> $s3
 # MaximoElemento -> $s4
+#Opcion 1 -> $s5
+#Opcion 2 -> $s6
+#Opcion 3 -> $s7
+#Opcion 4 -> $t8
+
 
 
 main:
     la $s0, mat    #Cargo la dirección de inicio en del vector
-    lw $s1,nfil   #Meto el valor de las filas
-    lw $s2,ncol   # Meto el valor de las columnas
-    lw $s3,size   # Meto el valor que ocupa cada valor de la mat
-    lw $s4,maximoElementos # meto el valor de max elementos
+    li $s1,20   #Meto el valor de las filas
+    li $s2,10   # Meto el valor de las columnas
+    li $s3,4   # Meto el valor que ocupa cada valor de la mat
+    li $s4,20 # meto el valor de max elementos
+
 # Titulo del programa
     li $v0, 4
     la $a0, titulo
     syscall
+    Menu:
 #std::cout << "\nLa matriz es " << nfil << "x" << ncol << "\n";
     li $v0, 4
     la $a0, msg_matriz
     syscall 
-    li $v0, 5
+    li $v0, 1
     move $a0, $s1
     syscall
     li $v0, 4
     la $a0, msg_x
     syscall
-    li $v0, 5
+    li $v0, 1
     move $a0, $s2
     syscall
     li $v0, 4
@@ -91,45 +98,237 @@ main:
 # for (int c = 0; c < ncol; c++ ) {
         li $t1, 0
         for2:
-            mul $t2, $t0, $s2 // [f*ncol+c] 
-            addi $t2, $t2, $t1 // [f*ncol+c] = $t2
-            mul $t2, $s3, $t2 // [f*ncol+c] * size 
-            addu $t2, $s1, $t2 // Contiene la dirección
+            mul $t2, $t0, $s2 #[f*ncol+c] 
+            mul $t2, $s3, $t2 # [f*ncol+c] * size 
+            mul $t4, $t1, $s3
+            add $t2, $t4, $t2 # [f*ncol+c] = $t2
+
+            addu $t2, $s0, $t2 # Contiene la dirección
             lw $t2, 0($t2)
 # std::cout << mat[f*ncol+c] << "  "; // equivalente a acceso `mat[f][c]`
-            li $v0, 5
+            li $v0, 1
             move $a0, $t2
             syscall
             li $v0, 4
             la $a0, separador
             syscall
-
-            addi $t1, $t1, 1
-            bgt $t1, $s2, for2
+            addi $t1, 1
+            blt $t1, $s2, for2
         for2fin:
 #std::cout << "\n";
         li $v0, 4
         la $a0, newline
         syscall 
-        addi $t0, $t0, 1
+        addi $t0, 1
         blt $t0, $s1, for1
     for1fin:
-    Menu: // Inicio del menu
+# Inicio del Menu
 #std::cout << "(1) Cambiar dimensiones" << std::endl;
 #std::cout << "(2) Intercambiar dos elementos" << std::endl;
 #std::cout << "(3) Suma elementos del perímetro" << std::endl;
 #std::cout << "(4) Calcula máximo y mínimo de la diagonal principal" << std::endl;
 #std::cout << "(0) Salir" << std::endl;
+    li $s5,1 # Cargo las opciones
+    li $s6,2
+    li $s7,3
+    li $t8,4
     li $v0, 4
     la $a0, menu
     syscall
+    li $v0, 5
+    syscall
+    move $t3, $v0
+
+    beq $t3, $s5, cambiar_dim                 # Jump a opcion 1
+    beq $t3, $s6, intercambiar_elem           # Jump a opcion 2
+    beq $t3, $s7, sum_peri                    # Jump a opcion 3
+    beq $t3, $t8, diagonal_max_min            # Jump a opcion 4
+    beqz $t3, fin_programa                    # Jump a opcion 0
+    
+    errorfila:
+    li $v0, 4
+    la $a0, $error_nfilas
+    syscall
+    b Menu
+    finerrorfila:
+
+    errorcolumnas:
+    li $v0, 4
+    la $a0, $error_ncols
+    syscall
+    b Menu
+    finerrorcolumnas:
+#(1) Cambiar dimensiones
+    cambiar_dim:
+#std::cout << "Introduzca el número de filas ";
+    li $v0, 4
+    la $a0, msg_nfilas
+    syscall
+#std::cin >> filas;
+    li $v0, 5
+    syscall
+    move $s1, $v0
+#std::cout << "Introduzca el número de columnas ";
+    li $v0, 4
+    la $a0, msg_ncols
+    syscall
+# std::cin >> columnas;
+    li $v0, 5
+    syscall
+    move $s2, $v0
+# for ( int f = 0; f < nfil; f++) {
+    li $t0, 0
+    for11:
+# for (int c = 0; c < ncol; c++ ) {
+        li $t1, 0
+        for22:
+            mul $t2, $t0, $s2 #[f*ncol+c] 
+            mul $t2, $s3, $t2 # [f*ncol+c] * size 
+            mul $t4, $t1, $s3
+            add $t2, $t4, $t2 # [f*ncol+c] = $t2
+
+            addu $t2, $s0, $t2 # Contiene la dirección
+            lw $t2, 0($t2)
+# std::cout << mat[f*ncol+c] << "  "; // equivalente a acceso `mat[f][c]`
+            li $v0, 1
+            move $a0, $t2
+            syscall
+            li $v0, 4
+            la $a0, separador
+            syscall
+            addi $t1, 1
+            blt $t1, $s2, for22
+        for22fin:
+#std::cout << "\n";
+        li $v0, 4
+        la $a0, newline
+        syscall 
+        addi $t0, 1
+        blt $t0, $s1, for11
+    for11fin:
+    b Menu
+    fincambiar_dim:
 
 
+#(2) Intercambiar dos elementos
+    intercambiar_elem:
+#std::cout << "Introduzca la fila del primer elemeneto a cambiar ";
+    li $v0, 4
+    la $a0, msg_i
+    syscall
+#std::cin >> fil1 ;
+    li $v0, 5
+    syscall
+    move $t0, $v0
+#std::cout << "\n";
+    li $v0, 4
+    la $a0, newline
+    syscall 
+#std::cout << "Introduzca la columna del primer elemeneto a cambiar ";
+    li $v0, 4
+    la $a0, msg_j
+    syscall
+#std::cin >> col1 ;
+    li $v0, 5
+    syscall
+    move $t1, $v0
+#std::cout << "\n";
+    li $v0, 4
+    la $a0, newline
+    syscall 
+#std::cout << "Introduzca la fila del segundo elemeneto a cambiar ";
+    li $v0, 4
+    la $a0, msg_r
+    syscall
+#std::cin >> fil2 ;
+    li $v0, 5
+    syscall
+    move $t2, $v0
+#std::cout << "\n";
+    li $v0, 4
+    la $a0, newline
+    syscall 
+#std::cout << "Introduzca la columna del segundo elemeneto a cambiar ";
+    li $v0, 4
+    la $a0, msg_s
+    syscall
+#std::cin >> col2;
+    li $v0, 5
+    syscall
+    move $t3, $v0
+#std::cout << "\n";
+    li $v0, 4
+    la $a0, newline
+    syscall 
+#int aux1 = mat[fil1*columnas+col1]; *size
+#int aux2 = mat[fil2*columnas+col2];
+    li $t4, 0
+    li $t5, 0
+    mul $t4, $s3, $t0
+    mul $t4, $t4, $s2
+    mul $t6, $t1, $s3
+    add $t4, $t4, $t6
+    addu $t4, $t4, $s0
+    lw $t0, 0($t4)
 
+    mul $t5, $s3, $t2
+    mul $t5, $s2, $t5
+    mul $t7, $t3, $s3
+    add $t5, $t5, $t7
+    addu $t5, $t5, $s0
+    lw $t1, 0($t5)
 
+    sw $t0,0($t5)
+    sw $t1,0($t4)
 
+    b Menu
+    finintercambiar_elem:
+#(3) Suma elementos del perímetro
+    sum_peri:
+        li $t0, 0
+        li $t1, 0
+        addi $t3, $s1, -1
+        addi $t4, $s2, -1
+    forfilas:
+        li $t2, 0
+    forcolumnas:
+        mul $t5, $t1, $s2
+        mul $t5, $t5, $s3  # $s3 -> size
+        mul $t6, $s3, $t2
+        add $t5, $t5, $t6
+# COnver a la direc
+        addu $t7, $t5, $s0
+        lw $s5, 0($t7)
+# Ahora veo si el num esta en el perim de la matriz y lo añado a $t0
+        beq $t1, $zero, addperim
+        beq $t2, $zero, addperim
+        beq $t1, $t3, addperim
+        beq $t2, $t4, addperim
+        b noaddperim
+    addperim:
+        add $s6, $s5, $t0
+    noaddperim:
+        addi $t0, 1
+        blt $t1, $s2, forcolumnas
+    finforcolumnas:
+        addi $t1,1
+        blt $s4, $s1, forfilas
+    finforfilas:
+    li $v0, 4
+    la $a0, msg_suma
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
 
+    b Menu
+    finsum_peri:
 
+#(4) Calcula máximo y mínimo de la diagonal principal
+    diagonal_max_min:
+
+    b Menu
+    findiagonal_max_min:
 
 
 
