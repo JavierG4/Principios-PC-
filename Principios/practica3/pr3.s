@@ -327,8 +327,39 @@ main:
 #(4) Calcula máximo y mínimo de la diagonal principal
     diagonal_max_min:
 
-    b Menu
-    findiagonal_max_min:
+    li $t0, 0
+    addu $t2, $s0, $zero
+    lw $t5, 0($t2)
+    lw $t6, 0($t2)
+# for (int c = 0; c < ncol; c++ ) {
+        li $t1, 1
+        for23:
+            mul $t2, $t0, $s2 #[fncol+c]
+            mul $t2, $s3, $t2 # [fncol+c] * size 
+            mul $t4, $t1, $s3
+            add $t2, $t4, $t2 # [fncol+c] = $t2
+
+            addu $t2, $s0, $t2 # Contiene la dirección
+            lw $t2, 0($t2)
+#if ( mat[fncol+c] > min) {
+            if1: ble $t2, $t6, iffin1
+                li $t5, $t2
+            iffin1:
+
+            if2: bgt $t2, $t5, iffin2
+                li $t5, $t2
+            iffin2:
+            addi $t1, 1
+            addi $t0, 1
+            blt $t1, $s2, for23
+        for23fin:
+        li $v0,4
+        la $a0, max
+        syscall
+        #li $v0, 1
+        #move
+
+    diagonal_max_minfin:
 
 
 

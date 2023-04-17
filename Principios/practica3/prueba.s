@@ -1,3 +1,7 @@
+# Mi nombre es Javier Gonzalez Brito
+# Fecha de la ultima mod 14 /04/2023
+#Mi correo alu0101548197@ull.edu.es
+
 # Esqueleto PR3
 
 maximoElementos=400 # numero de enteros maximo reservado para la matriz 1600 bytes
@@ -145,7 +149,7 @@ Menu:
     beq $t3, $s5, cambiar_dim                 # Jump a opcion 1
     beq $t3, $s6, intercambiar_elem           # Jump a opcion 2
     beq $t3, $s7, sumperi                    # Jump a opcion 3
-    #beq $t3, $t8, diagonal_max_min            # Jump a opcion 4
+    beq $t3, $t8, diagonal_max_min            # Jump a opcion 4
     beqz $t3, fin_programa                    # Jump a opcion 0
      
 errorop:
@@ -159,14 +163,14 @@ errorfila:
     li $v0, 4
     la $a0, error_nfilas
     syscall
-    b Menu
+    b Mostar_matriz
 finerrorfila:   
 
 errorcolumnas:
     li $v0, 4
     la $a0, error_ncols
     syscall
-    b Menu
+    b Mostar_matriz
 finerrorcolumnas:
 
 errordim:
@@ -177,7 +181,7 @@ errordim:
 finerrordim:
 
 #(1) Cambiar dimensiones
-    cambiar_dim:
+cambiar_dim:
 #std::cout << "Introduzca el número de filas ";
     li $v0, 4
     la $a0, msg_nfilas
@@ -185,9 +189,9 @@ finerrordim:
 #std::cin >> filas;
     li $v0, 5
     syscall
-    move $s1, $v0
+    move $t0, $v0
 #if (filas < 0)
-    blez $s1, errorfila
+    blez $t0, errorfila
 #std::cout << "Introduzca el número de columnas ";
     li $v0, 4
     la $a0, msg_ncols
@@ -195,13 +199,15 @@ finerrordim:
 # std::cin >> columnas;
     li $v0, 5
     syscall
-    move $s2, $v0
+    move $t1, $v0
 #if (col < 0)
-    blez $s2, errorcolumnas
+    blez $t1, errorcolumnas
 #if( filas*col > 400)
-    li $t1, 400 #max elementos
-    mul $t0, $s1, $s2
-    bgt $t0, $t1, errordim 
+    li $t7, 400 #max elementos
+    mul $t6, $t1, $t0
+    bgt $t6, $t7, errordim 
+    move $s2, $t1
+    move $s1, $t0
 #La matriz es nfilx ncol
     li $v0, 4
     la $a0, msg_matriz
@@ -249,11 +255,12 @@ finerrordim:
         blt $t0, $s1, for11
     for11fin:
     b Menu1
-    fincambiar_dim:
+fincambiar_dim:
 
 #(2) Intercambiar dos elementos
     intercambiar_elem:
 #std::cout << "Introduzca la fila del primer elemeneto a cambiar ";
+    li $t8, 0
     li $v0, 4
     la $a0, msg_i
     syscall
@@ -261,12 +268,14 @@ finerrordim:
     li $v0, 5
     syscall
     move $t0, $v0
+#if (filas < 0)
+    blt $t0, $t8, errorfila
+# if (t0 >= $s1)
+    bge $t0, $s1, errorfila
 #std::cout << "\n";
     li $v0, 4
     la $a0, newline
     syscall
-#if (filas < 0)
-    #blez $t2, errorfila
 #std::cout << "Introduzca la columna del primer elemeneto a cambiar ";
     li $v0, 4
     la $a0, msg_j
@@ -275,12 +284,14 @@ finerrordim:
     li $v0, 5
     syscall
     move $t1, $v0
+#if (col < 0)
+    blt $t1, $t8, errorcolumnas
+# if (t1 >= $s2)
+    bge $t1, $s2, errorcolumnas
 #std::cout << "\n";
     li $v0, 4
     la $a0, newline
     syscall
-#if (col < 0)
-    #blez $t1, errorcolumnas
 #std::cout << "Introduzca la fila del segundo elemeneto a cambiar ";
     li $v0, 4
     la $a0, msg_r
@@ -289,12 +300,14 @@ finerrordim:
     li $v0, 5
     syscall
     move $t2, $v0
+#if (filas < 0)
+    blt $t2, $t8, errorfila
+# if (t2 >= $s1)
+    bge $t2, $s1, errorfila
 #std::cout << "\n";
     li $v0, 4
     la $a0, newline
     syscall 
-#if (filas < 0)
-    #blez $t2, errorfila
 #std::cout << "Introduzca la columna del segundo elemeneto a cambiar ";
     li $v0, 4
     la $a0, msg_s
@@ -303,12 +316,15 @@ finerrordim:
     li $v0, 5
     syscall
     move $t3, $v0
+#if (col < 0)
+    blt $t3, $t8, errorcolumnas
+# if (t3 >= $s2)
+    bge $t3, $s2, errorcolumnas
 #std::cout << "\n";
     li $v0, 4
     la $a0, newline
     syscall 
-#if (col < 0)
-    #blez $t3, errorcolumnas
+
 #int aux1 = mat[fil1*columnas+col1]; *size
 #int aux2 = mat[fil2*columnas+col2];
     li $t4, 0
@@ -345,17 +361,19 @@ finerrordim:
         mul $t5, $t5, $s3  # $s3 -> size
         mul $t6, $s3, $t2
         add $t5, $t5, $t6
-# COnver a la direc
+# Convierto la direccion
         addu $t7, $t5, $s0
         lw $s5, 0($t7)
-# Ahora veo si el num esta en el perim de la matriz y lo añado a $t0
+# compruebo si esta en el perimetro y sino salta al noadd
         beq $t1, $zero, addperim
         beq $t2, $zero, addperim
         beq $t1, $t3, addperim
         beq $t2, $t4, addperim
         b noaddperim
+#añado el valor que se esta viendo a la suma
     addperim:
         add $t0, $s5, $t0
+#Añado 1 al for y compruebo
     noaddperim:
         addi $t2, 1
         blt $t2, $s2, forcolumnas
@@ -375,14 +393,54 @@ finerrordim:
     b Mostar_matriz
     finsum_peri:
 
+diagonal_max_min:
+#cargo los valores inicales
+    li $t0, 0
+    lw $t5, 0($s0) #max
+    lw $t6, 0($s0) #min
+    beq $s2, 400, mensaje
+# for (int c = 0; c < ncol; c++ ) {
+        li $t1, 0
+        for23:
+            mul $t2, $t0, $s2 #[f*ncol+c]
+            mul $t2, $s3, $t2 # [f*ncol+c] * size 
+            mul $t4, $t1, $s3
+            add $t2, $t4, $t2 # [f*ncol+c] = $t2
 
-
-
+            addu $t2, $s0, $t2 # Contiene la dirección
+            lw $t2, 0($t2)
+#if ( mat[fncol+c] < min) {
+            if1: ble $t2, $t5, iffin1
+                move $t5, $t2
+            iffin1:
+#if ( mat[fncol+c] > max) {
+            if2: bgt $t2, $t6, iffin2
+                move $t6, $t2
+            iffin2:
+            addi $t1, 1
+            addi $t0, 1
+            blt $t1, $s2 for23
+        for23fin:
+        mensaje:
+# Mostar los valores maximos y minimos
+        li $v0,4
+        la $a0, msg_max
+        syscall
+        li $v0, 1
+        move $a0, $t5
+        syscall
+        li $v0,4
+        la $a0, msg_min
+        syscall
+        li $v0, 1
+        move $a0, $t6
+        syscall
+    b Mostar_matriz
+diagonal_max_minfin:
     fin_programa:
 #std::cout << "\nFin del programa\n";
 	li $v0, 4
 	la $a0, msg_fin
 	syscall
-    
 	li $v0,10
     syscall
