@@ -90,10 +90,27 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     # Primer Parametro de entrada: el primer parámetro es la dirección base del vecto
     # Segundo Parametro de entrada:el índice del elemento que queremos modificar
     # Tercer Parametro de entrada: un flotante de simple precisión
-        move $t0, $a0
-        move $t1, $a1
-        move $t2, $a2
+        add $sp $sp -20
+        sw $ra, 16($sp)
+        sw $s6, 12($sp)
+        sw $s5, 8($sp)
+        sw $s4, 4($sp)
+        s.s $f20, 0($sp)
+#Cambio de valor dentro del vector
+        move $s5, $a0
+        move $s4, $a1
+        mov.s $f20, $f12
+        mul $s6, $s4, 4
+        addu $s6, $s6, $s5
+        s.s $f20, 0($s6)
 
+        l.s $f20, 0($sp)
+        lw $s4, 4($sp)
+        lw $s5, 8($sp)
+        lw $s6, 12($sp)
+        lw $ra, 16($sp)
+        add $sp $sp 20 #liberar memoria
+        jr $ra
     FinChange_elto:
 
     Swap: #intercambiar dos elementos de un vector y recibe tres parametros de entrada
@@ -284,6 +301,46 @@ cambiar_elem:
     la $a0, elige_elto
     syscall
     
+    li $v0, 5
+    syscall
+    move $t1, $v0
+    sub $t1, $t1, 1
+    if13: beq $t0, $t8, if23fin
+#if (dim <= 0)
+        blez $t1, errorind
+#if ( dim > 40)
+        bgt $t1, $s2, errorind
+        li $v0,4
+        la $a0, newval
+        syscall
+        li $v0, 6
+        syscall
+        mov.s $f12, $f0
+        move $a0, $s0
+        move $a1 ,$t1
+        jal Change_elto
+        b Menu
+    if13fin:
+    if23:
+#if (dim <= 0)
+        blez $t1, errorind
+#if ( dim > 40)
+        bgt $t1, $s3, errorind
+        li $v0,4
+        la $a0, newval
+        syscall
+        li $v0, 6
+        syscall
+        mov.s $f12, $f0
+        move $a0, $s1
+        move $a1 ,$t1
+        jal Change_elto
+        b Menu
+    if23fin:
+
+
+
+
 cambiar_elemfin:
 
 
