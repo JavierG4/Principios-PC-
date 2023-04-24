@@ -186,6 +186,7 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
             mov.s $f14, $f20
             jal mult_add
             mov.s $f20, $f0
+            addi $s7, $s7, 1
         blt $s7, $s6, for33
         for33fin:
 
