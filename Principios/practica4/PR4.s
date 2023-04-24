@@ -160,18 +160,34 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     #Primer argumento: es la dirección de memoria del primer vector
     #Segundo argumento: la dirección de memoria del segundo vector
     #Tercer argumento: es el número de elementos de cada vector, supone el programa que tien la misma direccion el rpograma principal es el que hace la comprobacion 
-        add $sp $sp -28
-        sw $ra, 24($sp)
+        add $sp $sp -32
+        sw $ra, 28($sp)
+        sw $s7, 24($sp)
         s.s $f22, 20($sp)
         s.s $f21, 16($sp)
         s.s $f20, 12($sp)
         sw $s6, 8($sp)
         sw $s5, 4($sp)
-        sw $s4, 0$sp)
+        sw $s4, 0($sp)
         move $s4, $a0
         move $s5, $a1
         move $s6, $a2
-
+        li.s $f20, 0.0
+        li $s7, 0
+        for33:
+            mul $t1, $s7, 4
+            mul $t2, $s7, 4
+            addu $t1, $s4, $t1
+            addu $t2, $s5, $t2
+            l.s $f21, 0($t1)
+            l.s $f22, 0($t2)
+            mov.s $f12, $f21
+            mov.s $f13, $f22
+            mov.s $f14, $f20
+            jal mult_add
+            mov.s $f20, $f0
+        blt $s7, $s6, for33
+        for33fin:
 
         lw $s4, 0($sp)
         lw $s5, 4($sp)
@@ -180,8 +196,8 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
         l.s $f21, 16($sp)
         l.s $f22, 20($sp)
         lw $ra, 24($sp)
-        add $sp $sp 28
-        move $f0, $f20
+        add $sp $sp 32
+        mov.s $f0, $f20
     prod_esc_fin:
 
 
@@ -359,7 +375,7 @@ cambiar_elem:
         blez $t1, errorind
 #if ( dim > 40)
         bgt $t1, $s3, errorind
-        li $v 0,4
+        li $v0 ,4
         la $a0, newval
         syscall
         li $v0, 6
@@ -371,19 +387,22 @@ cambiar_elem:
         b Menu
     if23fin:
 cambiar_elemfin:
+
+prodesc:
 #(if dim1 != dim2)
-    bne $s2, $s1, errorddim
+    bne $s2, $s3, errorddim
     move $a0, $s0
     move $a1, $s1
     move $a2, $s2
     jal prod_esc
-    
+    mov.s $f4, $f0
     li $v0, 4
-    li $a0, msg prod_esc
-prodesc:
-
-
-
+    la $a0, msg_prodesc
+    syscall
+    li $v0, 6
+    mov.s $f0, $f4
+    syscall
+    b Menu
 prodescfin:
 # errores
 errordim:
