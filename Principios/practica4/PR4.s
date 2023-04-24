@@ -86,7 +86,7 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
         jr $ra
     print_vec_fin:
 
-    Change_elto: #Modificar un elemento concreto de un vector y coge 3 parametros
+    change_elto: #Modificar un elemento concreto de un vector y coge 3 parametros
     # Primer Parametro de entrada: el primer parámetro es la dirección base del vecto
     # Segundo Parametro de entrada:el índice del elemento que queremos modificar
     # Tercer Parametro de entrada: un flotante de simple precisión
@@ -111,9 +111,9 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
         lw $ra, 16($sp)
         add $sp $sp 20 #liberar memoria
         jr $ra
-    FinChange_elto:
+    change_elto_fin:
 
-    Swap: #intercambiar dos elementos de un vector y recibe tres parametros de entrada
+    swap: #intercambiar dos elementos de un vector y recibe tres parametros de entrada
     # Primer Parametro de entrada: el primer parámetro es la dirección base del vecto
     # Segundo Parametro de entrada: el índice del primer elemento que queremos intercambiar
     # Tercer Parametro de entrada: el índice del segundo elemento que queremos intercambiar
@@ -121,35 +121,68 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
         move $t1, $a1
         move $t2, $a2
 
-    FinSwap:
+        mul $t3, $t1, 4
+        mul $t4, $t2, 4
+        addu $t3, $t3, $t0
+        addu $t4, $t4, $t0
+        l.s $f5, 0($t3)
+        l.s $f4, 0($t4)
+        s.s $f5,0($t4)
+        s.s $f4,0($t3)
 
-    Mirror: #invertir los elementos de un vector
+        jr $ra
+    swap_fin:
+
+    mirror: #invertir los elementos de un vector
     # Primer argmento: la dirección de memoria del vector
     # Segundo argumento: el número de elementos del vector
         move $t0, $a0
         move $t1, $a1
 
-    FinMirror:
+    mirror_fin:
 
-    Mult_add:#Realizar la operación de multiplicar los dos primeros argumentos
+    mult_add:#Realizar la operación de multiplicar los dos primeros argumentos
              # y sumarle el tercer argumento, devolviendo este valor como resultado de la subrutina
     #Primer argumento: numero a multiplicar con el segundo
     #Segundo argumento: numero a multiplicar con el primero
     #Tercer argumento: numero a sumar con la multiplicacion de los dos primeros
-        move $t0, $a0
-        move $t1, $a1
-        move $t2, $a2
+        mov.s $f4, $f12
+        mov.s $f5, $f13
+        mov.s $f6, $f14
+#Incio del algoritmo de multiplicar los dos primeros y sumar el iultimo
+        mul.s $f4, $f4, $f5
+        add.s $f4, $f6, $f4
+        mov.s $f0, $f4
+        jr $ra
+    mult_add_fin:
 
-    FinMult_add:
-
-    Prod_esc: 
+    prod_esc: 
     #Primer argumento: es la dirección de memoria del primer vector
     #Segundo argumento: la dirección de memoria del segundo vector
     #Tercer argumento: es el número de elementos de cada vector, supone el programa que tien la misma direccion el rpograma principal es el que hace la comprobacion 
-        move $t0, $a0
-        move $t1, $a1
-        move $t2, $a2
-    FinProd_esc:
+        add $sp $sp -28
+        sw $ra, 24($sp)
+        s.s $f22, 20($sp)
+        s.s $f21, 16($sp)
+        s.s $f20, 12($sp)
+        sw $s6, 8($sp)
+        sw $s5, 4($sp)
+        sw $s4, 0$sp)
+        move $s4, $a0
+        move $s5, $a1
+        move $s6, $a2
+
+
+        lw $s4, 0($sp)
+        lw $s5, 4($sp)
+        lw $s6, 8($sp)
+        l.s $f20, 12($sp)
+        l.s $f21, 16($sp)
+        l.s $f22, 20($sp)
+        lw $ra, 24($sp)
+        add $sp $sp 28
+        move $f0, $f20
+    prod_esc_fin:
 
 
 
@@ -241,7 +274,7 @@ Menu:
     beq $t3, $s5, cambiar_dim                 # Jump a opcion 1
     beq $t3, $s6, cambiar_elem           # Jump a opcion 2
     #beq $t3, $s7, invertir_vec                   # Jump a opcion 3
-    #beq $t3, $t8, diagonal_max_min            # Jump a opcion 4
+    beq $t3, $t8, prodesc       # Jump a opcion 4
     beqz $t3, fin_programa                    # Jump a opcion 0
     b erroropincorrecta
 
@@ -304,8 +337,8 @@ cambiar_elem:
     li $v0, 5
     syscall
     move $t1, $v0
-    sub $t1, $t1, 1
-    if13: beq $t0, $t8, if23fin
+    #sub $t1, $t1, 1
+    if13: beq $t0, $t8, if23
 #if (dim <= 0)
         blez $t1, errorind
 #if ( dim > 40)
@@ -318,7 +351,7 @@ cambiar_elem:
         mov.s $f12, $f0
         move $a0, $s0
         move $a1 ,$t1
-        jal Change_elto
+        jal change_elto
         b Menu
     if13fin:
     if23:
@@ -326,7 +359,7 @@ cambiar_elem:
         blez $t1, errorind
 #if ( dim > 40)
         bgt $t1, $s3, errorind
-        li $v0,4
+        li $v 0,4
         la $a0, newval
         syscall
         li $v0, 6
@@ -334,17 +367,24 @@ cambiar_elem:
         mov.s $f12, $f0
         move $a0, $s1
         move $a1 ,$t1
-        jal Change_elto
+        jal change_elto
         b Menu
     if23fin:
-
-
-
-
 cambiar_elemfin:
+#(if dim1 != dim2)
+    bne $s2, $s1, errorddim
+    move $a0, $s0
+    move $a1, $s1
+    move $a2, $s2
+    jal prod_esc
+    
+    li $v0, 4
+    li $a0, msg prod_esc
+prodesc:
 
 
 
+prodescfin:
 # errores
 errordim:
     li $v0, 4
