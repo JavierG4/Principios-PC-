@@ -55,6 +55,7 @@ msg_suma:   .asciiz "\n\nSuma de los elementos del perímetro: "
 msg_max:    .asciiz "\nEl máximo de la diagonal principal es "
 msg_min:    .asciiz " y el mínimo "
 msg_fin:    .asciiz "\nFin del programa.\n"
+
     .text
 # mat -> $s0
 # nfil -> $s1
@@ -139,6 +140,7 @@ Menu:
     li $s6,2
     li $s7,3
     li $t8,4
+    li $t9, 5
     li $v0, 4
     la $a0, menu
     syscall
@@ -150,6 +152,7 @@ Menu:
     beq $t3, $s6, intercambiar_elem           # Jump a opcion 2
     beq $t3, $s7, sumperi                    # Jump a opcion 3
     beq $t3, $t8, diagonal_max_min            # Jump a opcion 4
+    beq $t3, $t9, cambio_col
     beqz $t3, fin_programa                    # Jump a opcion 0
      
 errorop:
@@ -437,6 +440,48 @@ diagonal_max_min:
         syscall
     b Mostar_matriz
 diagonal_max_minfin:
+
+
+cambio_col:
+# j y s
+    li $v0, 4
+    la $a0, msg_j
+    syscall
+
+    li $v0, 5
+    syscall
+    move $t0, $v0
+
+    li $v0, 4
+    la $a0, msg_s
+    syscall
+
+    li $v0, 5
+    syscall
+    move $t1, $v0
+
+        li $t3, 0
+        for66:
+            mul $t9, $t3, $s2
+            add $t9, $t9, $t0
+            mul $t9, $t9, 4
+            addu $t9, $t9, $s0
+            lw $t6, 0($t9)
+
+            mul $t8, $t3, $s2
+            add $t8, $t8, $t1
+            mul $t8, $t8, 4
+            addu $t8, $t8, $s0
+            lw $t5,0($t8)
+
+            sw $t6,0 ($t8)
+            sw $t5, 0($t9)
+
+            addi $t3, $t3, 1
+            blt $t3, $s2, for66
+        forfin66:
+    b Mostar_matriz
+cambio_colfin:
     fin_programa:
 #std::cout << "\nFin del programa\n";
 	li $v0, 4

@@ -50,6 +50,7 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     # Primer Parametro de entrada:  la dirección base del vector a imprimir
     # Segundo Parametro de entrada: el número de elementos que tiene el vector
     # Tercer Parametro de entrada: será la dirección de memoria de una cadena que sirva como separador al imprimir los elementos del vecto
+    # Coloco los registros en la pila y actualizo el stack pointer
         add $sp $sp -24
         sw $ra, 20($sp)
         sw $s3, 16($sp)
@@ -57,23 +58,31 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
         sw $s5, 8($sp)
         sw $s6, 4($sp)
         sw $s7, 0($sp)
+    # Muevo los parametros de entrada a salvados para que no pierdan al hacer syscall
         move $s4, $a0
         move $s6, $a1
-        move $s3, $a2        
+        move $s3, $a2  
+    # Int i = 0      
         li $s7, 0
+    # Inicializo el for en que imprimo el vector
         for21:
+    #Obtengo el desplazamiento
             mul $s5, $s7, 4
             addu $s5, $s4, $s5
-            l.s $f12, 0($s5)
+    #Obtengo el dato del vector
+            l.s $f4, 0($s5)
 
+    # Imprimo el valor por pantalla
             li $v0, 2
+            mov.s $f12, $f4
             syscall
-
+    # std::cout << " ";
             li $v0, 4
             move $a0, $s3
             syscall
-            
+    # i++
             addi $s7, 1
+    #if (i < dim) {
             blt $s7, $s6, for21
         for21fin:
         lw $s7, 0($sp)
@@ -117,14 +126,17 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     # Primer Parametro de entrada: el primer parámetro es la dirección base del vecto
     # Segundo Parametro de entrada: el índice del primer elemento que queremos intercambiar
     # Tercer Parametro de entrada: el índice del segundo elemento que queremos intercambiar
+    #Muevo los parametros a 3 temporales para hacer el intercambio
         move $t0, $a0
         move $t1, $a1
         move $t2, $a2
-
+    # Obetengo los desplazamientos de memoria
         mul $t3, $t1, 4
         mul $t4, $t2, 4
+    # Añado el desplazamiento a la dirección de los vectores
         addu $t3, $t3, $t0
         addu $t4, $t4, $t0
+    #Cargo los valores con esas direcciones en dos registros
         l.s $f5, 0($t3)
         l.s $f4, 0($t4)
         s.s $f5,0($t4)
@@ -136,9 +148,40 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     mirror: #invertir los elementos de un vector
     # Primer argmento: la dirección de memoria del vector
     # Segundo argumento: el número de elementos del vector
-        move $t0, $a0
-        move $t1, $a1
+        add $sp $sp -4
+        sw $ra, 0($sp)
+# Si es menor o igual que uno salto al final y vuelvo 
+        ble $a1, 1, final
+        trivial: 
+    #E
+            add $sp $sp -12
+            sw $ra, 8($sp)
+            sw $a0, 4($sp)
+            sw $a1, 0($sp)
+            move $t3, $a1
 
+            move $a0, $a0
+            move $a1, $zero
+            add $a2, $t3, -1
+
+            jal swap
+        #Extraigo los valores elmentos de la pila y actualizo el stack pointer
+            lw $a1, 0($sp)
+            lw $a0, 4($sp)
+            lw $ra, 8($sp)
+            add $sp $sp 12 #liberar memoria
+        # Le resto dos al argumento1 que es del número de elementos
+            addi $a1, -2
+        #Avanzo 4 en la dirección de momemoria para poder así poner el indice en 0 para la siguiente
+            addi $a0, $a0, 4
+        #Salto ala función mirror de nuevo
+            jal mirror
+        fintrivial:
+        #Extraigo el elmento ra y actualizo el stack pointer
+        lw $ra, 0($sp)
+        add $sp $sp 4
+        final:
+        jr $ra
     mirror_fin:
 
     mult_add:#Realizar la operación de multiplicar los dos primeros argumentos
@@ -148,10 +191,10 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     #Tercer argumento: numero a sumar con la multiplicacion de los dos primeros
         mov.s $f4, $f12
         mov.s $f5, $f13
-        mov.s $f6, $f14
+        mov.s $f7, $f14
 #Incio del algoritmo de multiplicar los dos primeros y sumar el iultimo
         mul.s $f4, $f4, $f5
-        add.s $f4, $f6, $f4
+        add.s $f4, $f7, $f4
         mov.s $f0, $f4
         jr $ra
     mult_add_fin:
@@ -160,45 +203,40 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     #Primer argumento: es la dirección de memoria del primer vector
     #Segundo argumento: la dirección de memoria del segundo vector
     #Tercer argumento: es el número de elementos de cada vector, supone el programa que tien la misma direccion el rpograma principal es el que hace la comprobacion 
-        add $sp $sp -32
-        sw $ra, 28($sp)
-        sw $s7, 24($sp)
-        s.s $f22, 20($sp)
-        s.s $f21, 16($sp)
-        s.s $f20, 12($sp)
-        sw $s6, 8($sp)
-        sw $s5, 4($sp)
-        sw $s4, 0($sp)
-        move $s4, $a0
-        move $s5, $a1
-        move $s6, $a2
-        li.s $f20, 0.0
-        li $s7, 0
+        li $t3, 0
+        li.s $f4, 0.0
         for33:
-            mul $t1, $s7, 4
-            mul $t2, $s7, 4
-            addu $t1, $s4, $t1
-            addu $t2, $s5, $t2
-            l.s $f21, 0($t1)
-            l.s $f22, 0($t2)
-            mov.s $f12, $f21
-            mov.s $f13, $f22
-            mov.s $f14, $f20
+        # Coloco en la pila los valores que voy a usar y actualizo el stack pointer
+           add $sp $sp -20
+            sw $ra, 16($sp)
+            sw $t3, 12($sp)
+            sw $a2, 8($sp)
+            sw $a1, 4($sp)
+            sw $a0, 0($sp)
+        # Cargo los valores del vector1 y 2 y junto a la suma total lamo a la función mult_add
+            l.s $f12, 0($a0)
+            l.s $f13, 0($a1)
+            mov.s $f14, $f4
             jal mult_add
-            mov.s $f20, $f0
-            addi $s7, $s7, 1
-        blt $s7, $s6, for33
+        # Muevo el total al registro f4 de nuevo
+            mov.s $f4, $f0
+        #Extraigo los elementos de la pila y actualizo el stack pointer
+            lw $a0, 0($sp)
+            lw $a1, 4($sp)
+            lw $a2, 8($sp)
+            lw $t3, 12 ($sp)
+            lw $ra, 16($sp)
+            add $sp $sp 20
+        # Avanzo 4 en la direccion de memoria del vector 1 y 2
+            addi $a0, $a0, 4
+            addi $a1, $a1, 4
+        #i++
+            addi $t3, $t3, 1
+        # if(i < dim){
+            blt $t3, $a2, for33
         for33fin:
-
-        lw $s4, 0($sp)
-        lw $s5, 4($sp)
-        lw $s6, 8($sp)
-        l.s $f20, 12($sp)
-        l.s $f21, 16($sp)
-        l.s $f22, 20($sp)
-        lw $ra, 24($sp)
-        add $sp $sp 32
-        mov.s $f0, $f20
+        mov.s $f0, $f4
+        jr $ra
     prod_esc_fin:
 
 
@@ -290,7 +328,7 @@ Menu:
 
     beq $t3, $s5, cambiar_dim                 # Jump a opcion 1
     beq $t3, $s6, cambiar_elem           # Jump a opcion 2
-    #beq $t3, $s7, invertir_vec                   # Jump a opcion 3
+    beq $t3, $s7, invertir_vec                   # Jump a opcion 3
     beq $t3, $t8, prodesc       # Jump a opcion 4
     beqz $t3, fin_programa                    # Jump a opcion 0
     b erroropincorrecta
@@ -392,19 +430,41 @@ cambiar_elemfin:
 prodesc:
 #(if dim1 != dim2)
     bne $s2, $s3, errorddim
-    move $a0, $s0
-    move $a1, $s1
-    move $a2, $s2
+    move $a0, $s0 # Vector 1
+    move $a1, $s1 #Vector 2
+    move $a2, $s2 # Dim 1
     jal prod_esc
-    mov.s $f4, $f0
+    mov.s $f12, $f0
+# std::cout << "El producto escalar es " << total;
     li $v0, 4
     la $a0, msg_prodesc
     syscall
-    li $v0, 6
-    mov.s $f0, $f4
+    li $v0, 2
     syscall
     b Menu
 prodescfin:
+
+invertir_vec:
+    li $v0, 4
+    la $a0, elige_vec
+    syscall
+    li $v0, 5
+    syscall
+    move $t0, $v0
+#if (eleccion <= 0)
+    blez $t0, erroropincorrecta
+#if (eleccion > 2)
+    li $t8, 2
+    bgt $t0, $t8, erroropincorrecta
+    if56: beq
+
+
+    iffin56:
+    move $a0, $s0
+    move $a0 $s2
+    jal mirror
+    b Menu
+invertir_vecfin:
 # errores
 errordim:
     li $v0, 4

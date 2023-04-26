@@ -132,6 +132,7 @@ main:
     li $s6,2
     li $s7,3
     li $t8,4
+    li $t9,5
     li $v0, 4
     la $a0, menu
     syscall
@@ -143,6 +144,7 @@ main:
     beq $t3, $s6, intercambiar_elem           # Jump a opcion 2
     beq $t3, $s7, sum_peri                    # Jump a opcion 3
     beq $t3, $t8, diagonal_max_min            # Jump a opcion 4
+    beq $t3, $t9, col_cambio
     beqz $t3, fin_programa                    # Jump a opcion 0
     
     errorfila:
@@ -361,6 +363,10 @@ main:
 
     diagonal_max_minfin:
 
+    col_cambio:
+
+    b
+    colfin:
 
 
     fin_programa:
