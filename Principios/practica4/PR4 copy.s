@@ -9,7 +9,7 @@ n1:         .word 0 # numero eltos vector 1. Inicialmente suponemos vacios
 n2:         .word 0 # numero eltos vector 2. Inicialmente suponemos vacios
 space:      .asciiz " "
 newline:    .asciiz "\n"
-title:      .asciiz "\nPractica 4 de Principios de Computadores. Subrutinas.\n"
+title:      .asciiz "\nPractica 4 de Principios de Computadores hecha por Javier Gonzalez Brito. Subrutinas.\n"
 menu:       .ascii  "\n(1) Cambiar dimension de un vector\n(2) Cambiar un elemento de un vector\n"
             .ascii  "(3) Invertir un vector\n(4) Calcular el producto escalar de dos vectores\n"
             .asciiz "(0) Salir\n\nElija opcion: ";
@@ -45,12 +45,10 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
 #Mirror
 #Mult_add
 #Prod_esc
-
     print_vec: # Funcion que te imprime en pantalla el vector y coge 3 parametros de entrada
     # Primer Parametro de entrada:  la dirección base del vector a imprimir
     # Segundo Parametro de entrada: el número de elementos que tiene el vector
-    # Tercer Parametro de entrada: será la dirección de memoria de una cadena que sirva como separador al imprimir los elementos del vector
-
+    # Tercer Parametro de entrada: será la dirección de memoria de una cadena que sirva como separador al imprimir los elementos del vecto
     # Coloco los registros en la pila y actualizo el stack pointer
         add $sp $sp -24
         sw $ra, 20($sp)
@@ -72,6 +70,7 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
             addu $s5, $s4, $s5
     #Obtengo el dato del vector
             l.s $f4, 0($s5)
+
     # Imprimo el valor por pantalla
             li $v0, 2
             mov.s $f12, $f4
@@ -85,8 +84,6 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     #if (i < dim) {
             blt $s7, $s6, for21
         for21fin:
-
-    #Extraigo los valores elmentos de la pila y actualizo el stack pointer
         lw $s7, 0($sp)
         lw $s6, 4($sp)
         lw $s5, 8($sp)
@@ -101,15 +98,12 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     # Primer Parametro de entrada: el primer parámetro es la dirección base del vecto
     # Segundo Parametro de entrada:el índice del elemento que queremos modificar
     # Tercer Parametro de entrada: un flotante de simple precisión
-
-# Coloco en la pila los valores que voy a usar y actualizo el stack pointer
         add $sp $sp -20
         sw $ra, 16($sp)
         sw $s6, 12($sp)
         sw $s5, 8($sp)
         sw $s4, 4($sp)
         s.s $f20, 0($sp)
-
 #Cambio de valor dentro del vector
         move $s5, $a0
         move $s4, $a1
@@ -118,13 +112,12 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
         addu $s6, $s6, $s5
         s.s $f20, 0($s6)
 
-#Extraigo los valores elmentos de la pila y actualizo el stack pointer
         l.s $f20, 0($sp)
         lw $s4, 4($sp)
         lw $s5, 8($sp)
         lw $s6, 12($sp)
         lw $ra, 16($sp)
-        add $sp $sp 20 
+        add $sp $sp 20 #liberar memoria
         jr $ra
     change_elto_fin:
 
@@ -132,7 +125,6 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     # Primer Parametro de entrada: el primer parámetro es la dirección base del vecto
     # Segundo Parametro de entrada: el índice del primer elemento que queremos intercambiar
     # Tercer Parametro de entrada: el índice del segundo elemento que queremos intercambiar
-
     #Muevo los parametros a 3 temporales para hacer el intercambio
         move $t0, $a0
         move $t1, $a1
@@ -143,7 +135,7 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     # Añado el desplazamiento a la dirección de los vectores
         addu $t3, $t3, $t0
         addu $t4, $t4, $t0
-    #Cargo los valores con esas direcciones en los registros intercambiando sus desplazamientos
+    #Cargo los valores con esas direcciones en dos registros
         l.s $f5, 0($t3)
         l.s $f4, 0($t4)
         s.s $f5,0($t4)
@@ -155,41 +147,36 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
     mirror: #invertir los elementos de un vector
     # Primer argmento: la dirección de memoria del vector
     # Segundo argumento: el número de elementos del vector
-
-# Coloco en la pila la direccion de memoria para volver al main y actualizó el stack pointer
         add $sp $sp -4
         sw $ra, 0($sp)
 # Si es menor o igual que uno salto al final y vuelvo 
         ble $a1, 1, final
         trivial: 
-# Coloco en la pila los valores que voy a usar y actualizo el stack pointer
+    #E
             add $sp $sp -12
             sw $ra, 8($sp)
             sw $a0, 4($sp)
             sw $a1, 0($sp)
             move $t3, $a1
 
-# Muevo los parametros para poder llamar a la funcion de swap, en la que le paso la direccion
-# El indice inicial y el indice final
             move $a0, $a0
             move $a1, $zero
             add $a2, $t3, -1
 
             jal swap
-#Extraigo los valores elmentos de la pila y actualizo el stack pointer
+        #Extraigo los valores elmentos de la pila y actualizo el stack pointer
             lw $a1, 0($sp)
             lw $a0, 4($sp)
             lw $ra, 8($sp)
-            add $sp $sp 12 
-# Le resto dos al argumento1 que es del número de elementos
+            add $sp $sp 12 #liberar memoria
+        # Le resto dos al argumento1 que es del número de elementos
             addi $a1, -2
-#Avanzo 4 en la dirección de memoria para poder así poner el indice en 0 para la siguiente
+        #Avanzo 4 en la dirección de momemoria para poder así poner el indice en 0 para la siguiente
             addi $a0, $a0, 4
-#Salto ala función mirror de nuevo
-#Los valores de $a0 y $a1 se mantienen por lo que no hago ningún move
+        #Salto ala función mirror de nuevo
             jal mirror
         fintrivial:
-#Extraigo el elmento ra y actualizo el stack pointer
+        #Extraigo el elmento ra y actualizo el stack pointer
         lw $ra, 0($sp)
         add $sp $sp 4
         final:
@@ -344,13 +331,12 @@ Menu:
     li $v0, 5
     syscall
     move $t3, $v0
-#Si es opccion es igual a los valores cargados salta a esa opción
+
     beq $t3, $s5, cambiar_dim                 # Jump a opcion 1
     beq $t3, $s6, cambiar_elem                # Jump a opcion 2
     beq $t3, $s7, invertir_vec                # Jump a opcion 3
     beq $t3, $t8, prodesc                     # Jump a opcion 4
     beqz $t3, fin_programa                    # Jump a opcion 0
-# Si es una opciopn diferente salta al erroropincorrecta
     b erroropincorrecta
 
 cambiar_dim:
