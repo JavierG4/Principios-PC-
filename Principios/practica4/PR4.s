@@ -32,7 +32,7 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
 #s2 -> dim1
 #s3 -> dim2
 
-
+#Cambio 
 #l.s -> lw
 #s.s -> sw
 
