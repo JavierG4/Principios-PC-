@@ -1,5 +1,5 @@
 # Autor: Javier Gonzalez Brito
-# Fecha ultima modificacion: 27/04/2023
+# Fecha ultima modificacion: 28/04/2023
 size = 4     # bytes que ocupa cada elemento
 maxdim = 40  # dimension maxima que puede tener un vector
     .data
@@ -204,7 +204,7 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
         mov.s $f4, $f12
         mov.s $f5, $f13
         mov.s $f7, $f14
-#Incio del algoritmo de multiplicar los dos primeros y sumar el iultimo
+#Incio del algoritmo de multiplicar los dos primeros y sumar el último
         mul.s $f4, $f4, $f5
         add.s $f4, $f7, $f4
         mov.s $f0, $f4
@@ -416,6 +416,7 @@ cambiar_elem:
     li $v0, 5
     syscall
     move $t1, $v0
+
 # Si eleccion es igual a 2 salta al if23 en el que se cambian los valores del vector 2 
 # Sino es igual a dos se hace el cambio en el vector 1
     if13: beq $t0, $t8, if23
@@ -427,6 +428,7 @@ cambiar_elem:
         la $a0, newval
         syscall
         li $v0, 6
+#LLamada a la función de cambio de tamaño
         syscall
         mov.s $f12, $f0
         move $a0, $s0
@@ -444,6 +446,7 @@ cambiar_elem:
         syscall
         li $v0, 6
         syscall
+#LLamada a la función de cambio de tamaño
         mov.s $f12, $f0
         move $a0, $s1
         move $a1 ,$t1
@@ -453,7 +456,7 @@ cambiar_elem:
 cambiar_elemfin:
 
 prodesc:
-#(if dim1 != dim2)
+#(if dim1 != dim2) saltar a errorddim
     bne $s2, $s3, errorddim
     # Vector 1
     move $a0, $s0
@@ -502,7 +505,7 @@ invertir_vec:
         b Menu
     if57fin:
 invertir_vecfin:
-# errores
+# Errores
 # Error que te indica que la dimension es incorrecta
 errordim:
     li $v0, 4
