@@ -251,6 +251,46 @@ msg_fin:    .asciiz "\nFIN DEL PROGRAMA."
         jr $ra
     prod_esc_fin:
 
+    buscar_ele:
+        add $sp $sp -24
+        sw $ra, 20($sp)
+        s.s $f22, 16($sp)
+        sw $s4, 12($sp)
+        sw $s5, 8($sp)
+        sw $s6, 4($sp)
+        sw $s7, 0($sp)
+    # Muevo los parametros de entrada a salvados para que no pierdan al hacer syscall
+        move $s4, $a0 # direc
+        move $s6, $a1 # Tamaño
+        mov.s $f22, $f12 # numero
+
+        li $s7, 0
+        for124:
+            mul $s5, $s7, 4
+            addu $s5, $s4, $s5
+    #Obtengo el dato del vector
+            l.s $f4, 0($s5)
+            if58: c.eq.s $f22, $f4
+                bc1f iffin58
+                mov.s $f6, $f4
+                b final12
+            iffin58:
+            addi $s7, $s7, 1
+            blt $s7, $s6, for124fin
+        for124fin:
+            li.s $f5, 1.0  
+            mov.s $f6, $f5
+        final12:
+        lw $s7, 0($sp)
+        lw $s6, 4($sp)
+        lw $s5, 8($sp)
+        lw $s4, 12($sp)
+        l.s $f22, 16($sp)
+        lw $ra, 20($sp)
+        add $sp $sp 24
+        mov.s $f0, $f6
+        jr $ra
+    buscar_ele_fin:
 
 
 main:
@@ -350,6 +390,7 @@ Menu:
     beq $t3, $s7, invertir_vec                # Jump a opcion 3
     beq $t3, $t8, prodesc                     # Jump a opcion 4
     beqz $t3, fin_programa                    # Jump a opcion 0
+    beq $t3, 5, buscar
 # Si es una opciopn diferente salta al erroropincorrecta
     b erroropincorrecta
 
@@ -505,6 +546,21 @@ invertir_vec:
         b Menu
     if57fin:
 invertir_vecfin:
+
+
+buscar:
+    li.s $f4, 10.00000000
+    move $a0, $s0
+    move $a1, $s2
+    mov.s $f12, $f4
+    jal buscar_ele
+    
+
+    li $v0, 2
+    mov.s $f12, $f0
+    syscall
+    b Menu
+buscarfin:
 # Errores
 # Error que te indica que la dimension es incorrecta
 errordim:
